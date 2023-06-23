@@ -1,0 +1,38 @@
+<head>
+    <meta charset="utf-8" />
+    <title> PiSO Mounter</title>
+    <link rel="icon" href="{{ url_for('static', filename='P.png') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<body style="width:device-width">
+    <h1>PiSO Mounter</h1>
+
+    <h3 align="center"> Please Log In:</h3>
+
+    <form method="post" align="center" autocomplete="off">
+        <p class="logintext"> Username:  <input type=text name=username>
+        <p class="logintext"> Password:  <input type=password name=password>
+        <p><input class="plainbutton" type=submit value=Login>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-messages">
+          {% for category, message in messages %}
+          <div class="{{category}}" align="center">{{message}}</div>
+          {% endfor %}
+        </ul>
+        <script>
+          setTimeout(function() {
+            var flashMessages = document.getElementsByClassName('flash-messages')[0];
+            flashMessages.style.display = 'none';
+          }, 7500);  // Hide the flash message after 5 seconds (5000 milliseconds)
+        </script>
+      {% endif %}
+  {% endwith %}
+
+</body>
+

@@ -1,0 +1,260 @@
+table, td {
+    margin: 0 auto;
+      margin-top: 0px;
+      margin-right: auto;
+      margin-bottom: 0px;
+      margin-left: auto;
+      
+    border-spacing: 0;
+    font-weight: normal;
+    font-size: medium;
+    font-style: normal;
+    color: -internal-quirk-inherit;
+}
+
+.libraryth {
+    border-bottom: 2px solid rgb(150, 149, 149);
+    border-top: 0.25px solid rgb(150, 149, 149);
+}
+
+.librarytd {
+    border-bottom: 0.25px solid rgb(150, 149, 149);
+}
+
+.librarytable {
+    border-top: 1px solid rgb(150, 149, 149);
+    border-right: 1px solid rgb(150, 149, 149);
+    border-left: 1px solid rgb(150, 149, 149);
+    border-bottom: 1px solid rgb(150, 149, 149);
+}
+
+.mountedth {
+    border-bottom: 2px solid rgb(150, 149, 149);
+}
+
+.mountedtd {
+    border-bottom: 2px solid rgb(150, 149, 149);
+    border-left: 2px solid rgb(150, 149, 149);
+    border-right: 2px solid rgb(150, 149, 149);
+    font-size: large;
+}
+
+.highlight {
+    background: #eef7f7;
+}
+
+h1, h2, h4 {
+    margin-top: 0px;
+    margin-bottom: 5px;
+}
+h3{
+    margin-top: 0px;
+    margin-bottom: 5px;
+}
+
+
+.selectbutton {
+    background-color: #57b8c9;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .25rem;
+}
+
+.selectbutton:hover {
+    background-color: #4fa5b4;
+}
+
+.plainbutton {
+    background-color: #dfe1e2;
+    border: none;
+    color: black;
+    padding: 2px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .25rem;
+}
+
+.plainbutton:hover {
+    background-color: #cacbcc;
+}
+
+.sortcontainer {
+    display: grid;
+}
+
+.upbutton {
+    background-color: #dfe1e2;
+    border: none;
+    color: black;
+    padding: 0px 2px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 10px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .15rem;
+    margin-left: 10px;
+    margin-bottom: 15px;
+    position: absolute;
+}
+
+.downbutton {
+    background-color: #dfe1e2;
+    border: none;
+    color: black;
+    padding: 0px 2px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 10px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .15rem;
+    margin-left: 10px;
+    margin-top:15px;
+    position: absolute;
+}
+
+.upbutton:hover {
+    background-color: #cacbcc;
+}
+
+.downbutton:hover {
+    background-color: #cacbcc;
+}
+
+
+.greenbutton {
+    background-color: #60b64f;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .25rem;
+    margin-right:5px;
+    margin-top:10px;
+}
+
+.greenbutton:hover {
+    background-color: #52a143;
+}
+
+.yellowbutton {
+    background-color: #d2d443;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .25rem;
+    margin-right:5px;
+    margin-top:10px;
+}
+
+.yellowbutton:hover {
+    background-color: #c3c53e;
+}
+
+.redbutton {
+    background-color: #c95757;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: .25rem;
+    margin-right:5px;
+    margin-top:10px;
+}
+
+.redbutton:hover {
+    background-color: #9e4545;
+}
+
+
+.logintext {
+    font-size: large;
+    color: black;
+}
+
+input[type=text], select {
+    width: 200px;
+    padding: 3px 10px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: medium;
+}
+
+input[type=password], select {
+    width: 200px;
+    padding: 6px 10px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.body {
+    overflow: hidden;
+}
+
+.toprow {
+    width: 100%;
+}
+
+.leftcolumn {
+    float: left;
+    width: 74%;
+    margin-right: 1%;
+}
+
+.rightcolumn {
+    float: right;
+    width: 25%;
+}
+
+.flash-messages {
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    font-size: large;
+    margin-top: 50px;
+}
+
+.info {
+    color: rgb(63, 135, 4);
+}
+
+.error {
+    color: red;
+}

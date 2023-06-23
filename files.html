@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head> <!--Styling-->
+    <meta charset="utf-8" />
+    <title> PiSO Mounter</title>
+    <link rel="icon" href="{{ url_for('static', filename='PM4.png') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<script> // Table Sort Function
+  function sortTableAsc(n) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.getElementById("filetable");
+    switching = true;
+    dir = "asc";
+        /* Make a loop that will continue until
+        no switching has been done: */
+    while (switching) {
+          // Start by saying: no switching is done:
+      switching = false;
+      rows = table.rows;
+          /* Loop through all table rows (except the
+          first, which contains table headers): */
+      for (i = 1; i < (rows.length - 1); i++) {
+            // Start by saying there should be no switching:
+        shouldSwitch = false;
+            /* Get the two elements you want to compare,
+            one from current row and one from the next: */
+        x = rows[i].getElementsByTagName("TD")[n];
+        y = rows[i + 1].getElementsByTagName("TD")[n];
+            /* Check if the two rows should switch place,
+            based on the direction, asc or desc: */
+        if (dir == "asc") {
+          if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                // If so, mark as a switch and break the loop:
+            shouldSwitch = true;
+            break;
+          }
+        } else if (dir == "desc") {
+          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                // If so, mark as a switch and break the loop:
+            shouldSwitch = true;
+            break;
+          }
+        }
+      }
+      if (shouldSwitch) {
+            /* If a switch has been marked, make the switch
+            and mark that a switch has been done: */
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+            // Each time a switch is done, increase this count by 1:
+        switchcount ++;
+      }
+    }
+  }
+
+  function sortTableDesc(n) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.getElementById("filetable");
+    switching = true;
+    dir = "desc";
+        /* Make a loop that will continue until
+        no switching has been done: */
+    while (switching) {
+          // Start by saying: no switching is done:
+      switching = false;
+      rows = table.rows;
+          /* Loop through all table rows (except the
+          first, which contains table headers): */
+      for (i = 1; i < (rows.length - 1); i++) {
+            // Start by saying there should be no switching:
+        shouldSwitch = false;
+            /* Get the two elements you want to compare,
+            one from current row and one from the next: */
+        x = rows[i].getElementsByTagName("TD")[n];
+        y = rows[i + 1].getElementsByTagName("TD")[n];
+            /* Check if the two rows should switch place,
+            based on the direction, asc or desc: */
+        if (dir == "asc") {
+          if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                // If so, mark as a switch and break the loop:
+            shouldSwitch = true;
+            break;
+          }
+        } else if (dir == "desc") {
+          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                // If so, mark as a switch and break the loop:
+            shouldSwitch = true;
+            break;
+          }
+        }
+      }
+      if (shouldSwitch) {
+            /* If a switch has been marked, make the switch
+            and mark that a switch has been done: */
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+            // Each time a switch is done, increase this count by 1:
+        switchcount ++;
+      }
+    }
+  }
+
+      
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<body style="width: device-width"> <!--Sort Table on Load-->
+
+
+  <!-- TOP ROW -->
+  <div class="toprow">
+    <div>
+      <h1>PiSO Mounter <button style="margin-right:20px;margin-top: 10px;float:right;" class="plainbutton" onclick="location.href= '/logout'">Logout</button></h1>
+    </div>
+
+    <div style = "display: inline-block; margin-bottom: 5px;">
+      <h3 style="display:inline-block;margin-right:10px;"> IP:
+      </h3> <h3 style="color: rgb(0, 110, 255); display:inline-block;">{{ipaddress}}</h3> 
+      <input style="margin-left: 30px; display:inline-block;" type="text" id="search" placeholder="Search...">  
+      <div style="display:inline-block; margin-left: 10px">
+        <form enctype="multipart/form-data" action="/upload" method="post" align="center"> 
+          <input class="plainbutton" id="fileInput" type="file" name="file" accept=".img">
+          <input class="plainbutton" type=submit value=Upload>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- LEFT COLUMN-->
+  <div class="leftcolumn">
+
+
+      <!-- Image Library Table-->
+
+    <table id="filetable" class="librarytable" style="width:100%; float:left">
+      <tr id="headerrow" style="height:50px" class="libraryth">
+        <th class="libraryth" style="width:5%"><h3 align="left">ID<button class="upbutton" onclick="sortTableAsc(0)">▲</button><button class="downbutton" onclick="sortTableDesc(0)">▼</button></h3></th>
+        <th class="libraryth" style="width:60%"><h3 align="left">File Name <button class="upbutton" onclick="sortTableAsc(1)">▲</button><button class="downbutton" onclick="sortTableDesc(1)">▼</button></h3></th>
+        <th class="libraryth" style="width:30%"><h3 align="left">Size</h3></th>
+        <th class="libraryth" style="width:5%" align="left"><h3><button id="deselect" class="plainbutton" onclick="deselect()"> Deselect</button></h3></th> <!--Potenital Deselect Button, right now only unhighlights every row            <input style="margin-left: 30px;" type="text" id="search" placeholder="Search...">    -->
+      </tr>
+      {% for file_name, size in isofiles %}
+        {% set counter = loop.index %}
+      <tr style="height:60px; overflow: hidden">
+        <td class="librarytd" id="{{counter}}" align="left" style="width:5%">{{counter}}</td>
+        <td class="librarytd" id="file-{{counter}}" style="width:60%">{{file_name}}</td>
+        <td class="librarytd" id="size-{{counter}}" align="left" style="width:30%" >{{size}}</td>
+        <td class="librarytd" align="left" style="width:5%;"> <button style="margin-left: 10px" class="selectbutton" id="select-{{counter}}">Select</button></td>
+      </tr>
+      {% endfor %}
+    </table>
+
+
+      <!-- Mount, Delete Buttons-->
+
+    <form id="myform" method="POST">
+      <input type="hidden" style="display: inline-block" id="storefile" name="filename">
+      <input id="mount" class="greenbutton" type=submit formaction="/mount" value=Mount >
+      <input id="delete" class="redbutton" type=submit formaction="/delete" value=Delete > 
+    </form>
+  </div>
+
+
+  <!-- RIGHT COLUMN -->
+
+  <div class="rightcolumn">
+
+
+    <!-- Mounted File Table-->
+
+    <table style="width: 100%; float:right">
+      <tr style="height:50px">
+        <th class="mountedth"> Mounted File: </th>
+      </tr>
+      {% for file_name in mountedfiles %}
+        <tr style="height:50px">
+          <td class="mountedtd" align="center"> {{file_name}} </td>
+        </tr>
+      {% endfor %}
+    </table>
+
+
+    <!-- Connect, Eject, Unmount Buttons-->
+
+    <td>
+      <button class="greenbutton" onclick="location.href= '/connect'">Connect</button>
+      <button class="yellowbutton" onclick="location.href= '/eject'">Eject</button>
+      <button class="redbutton" onclick="location.href= '/unmount'" >Unmount</button> 
+    </td>
+
+    
+    <!-- Flashed Messages-->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <ul class="flash-messages">
+      {% for category, message in messages %}
+      <div class="{{category}}" align="center">{{message}}</div>
+      {% endfor %}
+      </ul>
+      <script>
+      setTimeout(function() {
+        var flashMessages = document.getElementsByClassName('flash-messages')[0];
+        flashMessages.style.display = 'none';
+      }, 7500);  // Hide the flash message after 5 seconds (5000 milliseconds)
+      </script>
+      {% endif %}
+    {% endwith %}
+
+  </div>
+
+
+  <script> // Search Function
+    function filterTable(value) {
+     if (value != "") {
+         $("#filetable td:contains-ci('" + value + "')").parent("tr").show();
+         $("#headerrow").show();
+     }
+    }
+
+    // jQuery expression for case-insensitive filter
+    $.extend($.expr[":"], {
+        "contains-ci": function (elem, i, match, array) {
+            return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+        }
+    });
+
+    // Event listener
+    $('#search').on('keyup', function () {
+        if ($(this).val() == '') {
+            $("#filetable tbody > tr").show();
+        } else {
+            $("#filetable > tbody > tr").hide();
+            var filters = $(this).val().split(' ');
+            filters.map(filterTable);
+        }
+    });
+  </script>
+
+
+  <script> // Select Function
+
+    $(document).ready(function() {
+      $('[id^="select-"]').click(function() {
+        var fileID = $(this).closest('tr').find('td:eq(1)').attr('id');
+        //document.write(fileID)
+        var filename = document.getElementById(fileID).innerText;
+        document.getElementById("storefile").setAttribute('name', filename);
+      });
+    });
+
+    $("button[id^='select']").on("click", function () {
+      $("tr").each(function () {
+        $(this).removeClass("highlight");
+          // Remove Indicator
+      });
+      $(this).closest("tr").addClass("highlight");
+                // Add Indicator
+                // When Mounting/UnMounting will mount the file with indicator
+                // If no file selected, do not mount anything
+      });
+  </script>
+
+
+  <script> // Deselect function
+    $("button[id^='deselect']").on("click", function () {  
+      $("tr").each(function () {
+        $(this).removeClass("highlight");
+      });
+
+      document.getElementById("storefile").setAttribute("name", "filename");
+
+    });
+  </script>
+
+
+</body>
+</html>
