@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head> <!--Styling-->
+
+
+<!--Styling-->
+<head>
     <meta charset="utf-8" />
     <title> PiSO Mounter</title>
-    <link rel="icon" href="{{ url_for('static', filename='PM4.png') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -115,84 +117,53 @@
 
   <!-- TOP ROW -->
   <div class="toprow">
+    <div >
+      <h1> PiSO Mounter</h1>
+    </div>
+  </div>
+
+  <!-- TOP LEFT COLUMN -->
+
+  <div class="topleftcolumn">
+    <div style = "display: inline-block;">
+      <h3 style="display:inline-block; margin-right:10px; margin-top: 0px; margin-bottom: 5px"> IP:</h3> 
+      <h3 style="color: rgb(0, 110, 255); display:inline-block;  margin-top: 0px; margin-bottom: 0px">{{ipaddress}}</h3> 
+    </div>
+  </div>
+
+  <!-- TOP RIGHT COLUMN -->
+
+  <div class="toprightcolumn">
     <div>
-      <h1>PiSO Mounter <button style="margin-right:20px;margin-top: 10px;float:right;" class="plainbutton" onclick="location.href= '/logout'">Logout</button></h1>
-    </div>
-
-    <div style = "display: inline-block; margin-bottom: 5px;">
-      <h3 style="display:inline-block;margin-right:10px;"> IP:
-      </h3> <h3 style="color: rgb(0, 110, 255); display:inline-block;">{{ipaddress}}</h3> 
-      <input style="margin-left: 30px; display:inline-block;" type="text" id="search" placeholder="Search...">  
-      <div style="display:inline-block; margin-left: 10px">
-        <form enctype="multipart/form-data" action="/upload" method="post" align="center"> 
-          <input class="plainbutton" id="fileInput" type="file" name="file" accept=".img">
-          <input class="plainbutton" type=submit value=Upload>
-        </form>
-      </div>
+      <input style="float:left; margin-top: 0px; margin-bottom: 5px; font-size: small"  type="text" id="search" placeholder="Search Files...">  
     </div>
   </div>
 
+  <!-- BOTTOM LEFT COLUMN -->
 
-  <!-- LEFT COLUMN-->
-  <div class="leftcolumn">
-
-
-      <!-- Image Library Table-->
-
-    <table id="filetable" class="librarytable" style="width:100%; float:left">
-      <tr id="headerrow" style="height:50px" class="libraryth">
-        <th class="libraryth" style="width:5%"><h3 align="left">ID<button class="upbutton" onclick="sortTableAsc(0)">▲</button><button class="downbutton" onclick="sortTableDesc(0)">▼</button></h3></th>
-        <th class="libraryth" style="width:60%"><h3 align="left">File Name <button class="upbutton" onclick="sortTableAsc(1)">▲</button><button class="downbutton" onclick="sortTableDesc(1)">▼</button></h3></th>
-        <th class="libraryth" style="width:30%"><h3 align="left">Size</h3></th>
-        <th class="libraryth" style="width:5%" align="left"><h3><button id="deselect" class="plainbutton" onclick="deselect()"> Deselect</button></h3></th> <!--Potenital Deselect Button, right now only unhighlights every row            <input style="margin-left: 30px;" type="text" id="search" placeholder="Search...">    -->
-      </tr>
-      {% for file_name, size in isofiles %}
-        {% set counter = loop.index %}
-      <tr style="height:60px; overflow: hidden">
-        <td class="librarytd" id="{{counter}}" align="left" style="width:5%">{{counter}}</td>
-        <td class="librarytd" id="file-{{counter}}" style="width:60%">{{file_name}}</td>
-        <td class="librarytd" id="size-{{counter}}" align="left" style="width:30%" >{{size}}</td>
-        <td class="librarytd" align="left" style="width:5%;"> <button style="margin-left: 10px" class="selectbutton" id="select-{{counter}}">Select</button></td>
-      </tr>
-      {% endfor %}
-    </table>
-
-
-      <!-- Mount, Delete Buttons-->
-
-    <form id="myform" method="POST">
-      <input type="hidden" style="display: inline-block" id="storefile" name="filename">
-      <input id="mount" class="greenbutton" type=submit formaction="/mount" value=Mount >
-      <input id="delete" class="redbutton" type=submit formaction="/delete" value=Delete > 
-    </form>
-  </div>
-
-
-  <!-- RIGHT COLUMN -->
-
-  <div class="rightcolumn">
+  <div class="bottomleftcolumn">
 
 
     <!-- Mounted File Table-->
 
-    <table style="width: 100%; float:right">
-      <tr style="height:50px">
+    <table class="mountedtable" style="width: 100%; float:right">
+      <tr>
         <th class="mountedth"> Mounted File: </th>
       </tr>
       {% for file_name in mountedfiles %}
-        <tr style="height:50px">
+        <tr>
           <td class="mountedtd" align="center"> {{file_name}} </td>
         </tr>
       {% endfor %}
     </table>
 
 
+
     <!-- Connect, Eject, Unmount Buttons-->
 
     <td>
-      <button class="greenbutton" onclick="location.href= '/connect'">Connect</button>
-      <button class="yellowbutton" onclick="location.href= '/eject'">Eject</button>
-      <button class="redbutton" onclick="location.href= '/unmount'" >Unmount</button> 
+      <button class="greenbutton"  onclick="location.href= '/connect'">Connect</button>
+      <button class="redbutton"  onclick="location.href= '/eject'">Eject</button>
     </td>
 
     
@@ -201,9 +172,9 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
       <ul class="flash-messages">
-      {% for category, message in messages %}
-      <div class="{{category}}" align="center">{{message}}</div>
-      {% endfor %}
+        {% for category, message in messages %}
+        <div class="{{category}}" align="center">{{message}}</div>
+        {% endfor %}
       </ul>
       <script>
       setTimeout(function() {
@@ -214,6 +185,40 @@
       {% endif %}
     {% endwith %}
 
+  </div>
+
+  <!-- BOTTOM RIGHT COLUMN-->
+
+  <div class="bottomrightcolumn">
+
+
+    <!-- Image Library Table-->
+
+    <table id="filetable" class="librarytable" style="width:100%; float:left">
+      <tr id="headerrow" style="height:50px" class="libraryth">
+        <th class="libraryth" align="left" style="width:10%"><h3>ID<button class="upbutton" onclick="sortTableAsc(0)">▲</button><button class="downbutton" onclick="sortTableDesc(0)">▼</button></h3></th>
+        <th class="libraryth" style="width:55%"><h3 align="left">File Name <button class="upbutton" onclick="sortTableAsc(1)">▲</button><button class="downbutton" onclick="sortTableDesc(1)">▼</button></h3></th>
+        <th class="libraryth" style="width:28%"><h3 align="left">Size</h3></th>
+        <th class="libraryth" style="width:7%;" align="center"><h3><button id="deselect" class="plainbutton" onclick="deselect()"> Deselect</button></h3></th>
+      </tr>
+      {% for file_name, size in isofiles %}
+        {% set counter = loop.index %}
+      <tr style="height:60px; overflow: hidden">
+        <td class="librarytd" id="{{counter}}" align="left" style="width:5%">{{counter}}</td>
+        <td class="librarytd" id="file-{{counter}}" style="width:55%">{{file_name}}</td>
+        <td class="librarytd" id="size-{{counter}}" align="left" style="width:28%" >{{size}}</td>
+        <td class="librarytd" align="center" style="width:7%;"> 
+          
+          <form id="select" method="get">
+            <!-- <input type="hidden" style="float:right" id="storefile" name="image_name" value="test"> -->
+            <input type="hidden" name = "image_name" value="memtest86-iso.iso">
+            <input id="select-{{counter}}" style="margin-left: 5px" class="selectbutton" type=submit formaction="/select_image" value=Select >
+          </form>
+        
+        </td>
+      </tr>
+      {% endfor %}
+   </table>
   </div>
 
 
