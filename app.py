@@ -1,29 +1,54 @@
 from flask import Flask, session, request, render_template, make_response, url_for, redirect, flash
 import os
 from flask_restful import Resource, Api
-from simplepam import authenticate
 import cgi
-import shutil
-from flask_login import LoginManager
 import subprocess
-import pyudev
+
+
+from flask_httpauth import HTTPTokenAuth
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text
+from sqlalchemy import create_engine, MetaData, select
+from typing import List
+import random, string
+import fileinput
 
 app = Flask(__name__)
 api = Api(app)
 form = cgi.FieldStorage
 
-# Acess Control
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = '/login'
+
 app.config['SECRET_KEY'] = 'wqkjfhkwqjehf827f2gfkiu'
 app.config['MESSAGE_FLASHING_OPTIONS'] = {'duration': 5}
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
 
-# ---FUNCTIONS---
+# -- USER DATABASE --
+
+#  Database Initialization
+db = SQLAlchemy(app)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    bearer_token = db.Column(db.String(200), nullable=True)
+
+# Reflect database to list and debug
+with app.app_context():
+    db.reflect()
+
+# Token Verification
+auth= HTTPTokenAuth(scheme='bearer')
+@auth.verify_token
+def verify_token(token):
+    if db.one_or_404(db.select(User).filter_by(bearer_token=token)):
+        user = db.session.execute(db.select(User).filter_by(bearer_token=token))
+        for user_obj in user.scalars():
+            username = f"{user_obj.username}"
+        return username
+
+# -- FUNCTIONS --
 
 # Function converts bytes to useful units (MB, GB, etc.)
 def convert_bytes(num):
@@ -32,212 +57,205 @@ def convert_bytes(num):
             return "%3.1f %s" % (num, x)
         num /= 1024.0
 
-# ---API'S---
+
+# -- ACCESS CONTROL --
+
+
+# API to create a new user
+
+class create_user(Resource): # curl -X POST -F 'username=' -F 'password=' http://127.0.0.1:5000/user/add
+    def post(self):
+
+        # Inputted Username and Password
+        input_username=request.form['username']
+        input_password=request.form['password']
+
+
+        # Generating Bearer Token
+        letters = string.ascii_lowercase
+        generated_token = ''.join(random.choice(letters) for i in range(15))
+
+
+        # Adding to Database
+        user = User(
+            username = str(input_username),
+            password = str(input_password),
+            bearer_token = generated_token,
+        )
+        db.session.add(user)
+        db.session.commit()
+        print(f"\n\n Your token is: {generated_token} \n\n")
+
+# API to delete a user
+
+class delete_user(Resource):
+    @auth.login_required
+    def post(self):
+
+        User.query.delete()
+        db.session.commit()
+
+# API to regenerate a users token
+
+class regenerate_token(Resource): # curl -X POST -H "Authorization: Bearer hgcrobsqzc" http://127.0.0.1:5000/user/regen
+    @auth.login_required  
+    def post(self):
+
+        user = auth.current_user()
+
+        # From the authorized bearer token, regnerate that users token
+
+        print(user)
+
+        input_username = user
+
+        # Find the current username and password
+
+        result = db.session.execute(db.select(User).filter_by(username=input_username))
+        for user_obj in result.scalars():
+            username=f"{user_obj.username}"
+            password=f"{user_obj.password}"
+
+
+        # Delete the current instance
+        db.session.delete(db.one_or_404(db.select(User).filter_by(username=input_username)))
+        db.session.commit()
+
+
+        # Generate New Bearer Token
+        letters = string.ascii_lowercase
+        generated_token = ''.join(random.choice(letters) for i in range(15))
+
+        # Add the new instance
+        user = User(
+            username = username,
+            password = password,
+            bearer_token = generated_token,
+        )
+        db.session.add(user)
+        db.session.commit()
+
+        # Print the new token to the user
+        print(f"\n\n Your new token is: {generated_token} \n\n")
+
+# API to list the user database
+
+class get_user(Resource): # curl -X POST http://127.0.0.1:5000/user/get
+    def post(self):
+        result = db.session.execute(select(User))
+        print(" \n \n User Database \n")
+        for user_obj in result.scalars():
+            print("-------------------------------------------------------------------")
+            print(f"| {user_obj.id} |      {user_obj.username}       |       {user_obj.password}        | {user_obj.bearer_token} |")
+        print("-------------------------------------------------------------------")
+        print("\n\n") 
+        
+
+# -- FUNCTIONALITY --
+        
+
+# API to Mount a Selected File
+class select_image(Resource): # curl -X "POST" -F "image_name=memtest86" -H "Authorization: Bearer cuxkamlekgyyurd" http://127.0.0.1:5000/select_image
+    @auth.login_required
+    def post(self):
+
+        # Identify the image to be selected from the user input
+
+        input_image_name = request.form['image_name']
+
+        output = subprocess.run(f'ls /home/asteralabs/pisomounter/images | grep {input_image_name}', stdout=subprocess.PIPE, text=True, shell=True, check=True)
+
+        image_name=output.stdout
+
+        print(f'\n \nThe following image will be mounted: {image_name} \n \n')
+
+        script_file_path = '/home/asteralabs/pisomounter/scripts/boot.sh'
+
+
+        # Modify the boot.sh file to boot from the selected image
+
+        # Old and new lines
+        old_line = "sudo modprobe"
+
+        # Specify and format the new line 
+        new_line = f"sudo modprobe g_mass_storage file=/home/asteralabs/pisomounter/images/{image_name} cdrom=1 stall=0"
+        new_line = new_line.strip()  
+        new_line = new_line.replace('\r', '').replace('\n', '')  
+
+        # Replace the old line with the new line
+        with fileinput.FileInput(script_file_path, inplace=True) as file:
+            for line in file:
+                if old_line in line:
+                    print(new_line)
+                else:
+                    print(line, end='')
+
+       
+# API to Connect the Pi USB to the System
+class connect(Resource): # curl --request "POST" --header "Authorization: Bearer test" http://127.0.0.1:5000/connect
+    @auth.login_required
+    def post(self):
+            #subprocess.run('sudo modprobe g_mass_storage file=/home/asteralabs/usb.img removable=1', shell=True)
+            print(f'\n \n Succesfully Connected \n \n')
+            
+    
+# API to Connect the Pi USB to the System
+class eject(Resource): # curl --request "POST" --header "Authorization: Bearer test" http://127.0.0.1:5000/eject
+    @auth.login_required
+    def post(self):
+            # subprocess.run('sudo modrpobe -r g_mass_storage', shell=True)
+            print(f"\n \nSuccesfully ejected! \n \n")
+    
+
+class dummy(Resource): # curl --request "POST" --header "Authorization: Bearer cuxkamlekgyyurd" http://127.0.0.1:5000/dummy
+    @auth.login_required
+    def post(self):
+           
+            print(f"\n\n\n\n")
+
+
+# -- WEB INTERFACE -- 
 
 # API to list the Files of the System Storage Directory
 class files(Resource):
     def get(self):
 
-        # If username is not in session, redirect to the login page
-
-        if 'username' in session:
-
-            # Image Library Listing
-
-            imagedirectory = '/home/flask-app/files'  # Replace with the desired directory path
-            isofiles = os.listdir(imagedirectory) 
-            isofiles_with_size= [ (file_name, convert_bytes(os.stat(os.path.join(imagedirectory, file_name)).st_size))
-                        for file_name in isofiles  ]
+        # Image Library Listing
+        imagedirectory = '/home/asteralabs/pisomounter/images'  # Replace with the desired directory path
+        isofiles = os.listdir(imagedirectory) 
+        isofiles_with_size= [ (file_name, convert_bytes(os.stat(os.path.join(imagedirectory, file_name)).st_size))
+            for file_name in isofiles  ]
             
-            # IP address
+        # IP address
 
-            ip_address = subprocess.call('hostname -I', shell=True)
+        #ip_address = subprocess.check_output('hostname -I', shell=True)
+        ip_address = subprocess.run('hostname -I', capture_output=True, text=True, shell=True).stdout.strip("\n")
+
+        # Mounted File(s)
             
-            #ip_address = '10.12.8.190'
+        mounteddirectory = 'mountedfile/'
+        mountedfiles = os.listdir(mounteddirectory)
 
-            # Mounted File(s)
-            
-            mounteddirectory = '/mnt/usb_share'
-            mountedfiles = os.listdir(mounteddirectory)
-
-            return make_response(render_template('files.html', isofiles=isofiles_with_size, mountedfiles=mountedfiles, ipaddress=ip_address))
-        return redirect(url_for('login'))
+        return make_response(render_template('files.html', isofiles=isofiles_with_size, mountedfiles=mountedfiles, ipaddress=ip_address))
     
 
-# API to Log in the Current User
-class login(Resource):
-    def post(self):
-        username = request.form['username']
-        password = request.form['password']
-        if authenticate(str(username), str(password)):
-            session['username'] = request.form['username']
-            return redirect(url_for('files'))
-        else:
-            flash('Incorrect Login')
-            return redirect(url_for('login'))
-    def get(self):
-        return make_response(render_template('login.html'))
-
-
-# API to Logout the Current User
-class logout(Resource):
-    def get(self):
-        session.pop('username', None)
-        return redirect(url_for('login'))
-
-
-# API to Mount a Selected File
-class mount(Resource):
-    def post(self):
-        if 'username' in session:    
-
-            path = '/mnt/usb_share'
-
-
-            # Converting the form data into the name of the file
-
-            data = request.form
-            filename = next(iter(data))
-            file = os.path.join('/home/flask-app/files', filename)
-
-            # default name is filename so this means that no file was selected, return to homepage
-
-            if filename == 'filename':
-                flash("No file selected!", 'error')
-                return redirect(url_for('files'))
-            
-
-            # eject the usb drive
-
-            # subprocess.run('sudo modrpobe -r g_mass_storage', shell=True)
-            
-            # Attach the conatiner file to a loop device, save the return code
-
-            #subprocess.run('sudo losetup --show -fP /home/asteralabs/usb.img', shell=True)
-
-            #assignedloop = '/dev/loop0'
-
-            # Mount the Partition onto the Filesystem
-
-            #subprocess.run("sudo mount -v " + assignedloop + " /mnt/usb_share", shell=True)
-
-            # remove current files in /mnt/usb_share
-
-            subprocess.run('sudo rm -rf /mnt/usb_share/*', shell=True)
-
-            # copy file to /mnt/usb_share
-
-            subprocess.run("sudo cp -v " + file + " /mnt/usb_share", shell=True)
-
-            # Unmount the file system
-
-            #subprocess.run('sudo umount /mnt/usb_share', shell=True)
-
-            # Detach the container file from the loop device
-
-            #subprocess.run('sudo losetup -D', shell=True)
-
-            #  Recconect the USB drive
-
-                #subprocess.run('sudo modprobe g_mass_storage file=/home/asteralabs/usb.img removable=1', shell=True)
-
-
-
-            
-
-            # Once mounting is done, flash that the file has mounted
-            flash("'" + filename + "' has succesfully mounted!", 'info')
-            return redirect(url_for('files'))
-        return redirect(url_for('login'))
-
-# API to Unmount the Selected File
-class unmount(Resource):
-    def get(self):
-        if 'username' in session:  
-
-            # No file present
-
-
-            
-            # Remove all contents of the filesystem
-
-            filename= 'file'
-            subprocess.run('sudo rm -rf /mnt/usb_share/*', shell=True)
-            flash("'" + filename + "' has succesfully unmounted!", 'info')
-            return redirect(url_for('files'))
-        return redirect(url_for('login'))
-
-
-
-# API to Delete the Selected File    
-class delete(Resource):
-    def post(self):
-        if 'username' in session:
-            # Converting the form data into the name of the file
-            data = request.form
-            filename = next(iter(data))
-            if filename == 'filename':
-                flash("No file selected!", 'error')
-                return redirect(url_for('files'))
-            os.remove(os.path.join('/home/flask-app/files', filename))
-            flash("'" + filename + "' has been deleted." , 'info')
-            return redirect(url_for('files'))
-        return redirect(url_for('login'))
-
-# API to Connect the Pi USB to the System
-class connect(Resource):
-    def get(self):
-        if 'username' in session:   
-            #subprocess.run('sudo modprobe g_mass_storage file=/home/asteralabs/usb.img removable=1', shell=True)
-            flash("Succesfully connected!", 'info')
-            return redirect(url_for('files'))
-        return redirect(url_for('login'))
-    
-# API to Connect the Pi USB to the System
-class eject(Resource):
-    def get(self):
-        if 'username' in session:   
-            # subprocess.run('sudo modrpobe -r g_mass_storage', shell=True)
-            flash("Succesfully ejected!", 'info')
-            return redirect(url_for('files'))
-        return redirect(url_for('login'))
-    
-
-# API to Upload Files to the System Storage Directory
-class upload(Resource): 
-    directory = '/home/flask-app/files' # Define the Upload Directory
-    app.config['directory'] = directory
-    def post(self):
-        if 'username' in session:  
-            file = request.files['file']
-            if file:
-                filename = file.filename
-                file.save(os.path.join(self.directory, filename))
-                return redirect(url_for('files'))
-        return redirect(url_for('login'))
-    def get(self):
-        if 'username' in session:  
-            return make_response(render_template('upload.html'))
-        return redirect(url_for('login'))
-    
-# API to display the connected system
-class connected(Resource):
-    def post(self):
-        
-
-        return
 
 # ---RESOURCE URL'S ---
 
-api.add_resource(files, '/')
-api.add_resource(mount, '/mount') # Mounting: __(filename)__ Progress bar, checkmark when uploaded, received?, cancel?, return to file list
+# FUNCTIONALLITY 
+api.add_resource(select_image, '/select_image')
 api.add_resource(connect, '/connect')
-api.add_resource(upload, '/upload')
-api.add_resource(login, '/login')
-api.add_resource(logout, '/logout')
-api.add_resource(delete, '/delete')
-api.add_resource(unmount, '/unmount')
 api.add_resource(eject, '/eject')
+# DATABASE
+api.add_resource(create_user, '/user/add')
+api.add_resource(delete_user, '/user/delete')
+api.add_resource(get_user, '/user/get')
+api.add_resource(regenerate_token, '/user/regen')
+api.add_resource(dummy, '/dummy')
+# WEB INTERFACE
+api.add_resource(files, '/')
+
+
 
 if __name__ == '__main__':
     app.config['TEMPLATES_AUTO_RELOAD'] = True
