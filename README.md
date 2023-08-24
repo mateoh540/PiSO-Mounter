@@ -4,7 +4,7 @@ A PiSO mounter is a raspberry pi zero that emulates a usb drive. The purpose of 
 
 This article details the steps to take to setup and use a PiSO Mounter Device
 
-:electric_plug: Equipment
+:Equipment
 Need:
 Raspberry Pi Zero W or Zero W 2
 
@@ -37,7 +37,7 @@ https://github.com/thagrol/Guides/blob/main/mass-storage-gadget.pdf - Connect yo
 
 Raspberry Pi Zero Wireless – Smart USB Flash Drive [Samba Server] (geekering.com)
 
-Setup
+:Setup
 Set up TP Link Deco (or any other suitable device) in access point mode.
 
 Connect Deco to Lab Network
